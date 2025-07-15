@@ -25,6 +25,7 @@ export async function gerarPix(
     paymentMethod: 'PIX',
     amount: amountCentavos,
     traceable: true,
+     utmQuery: utmQuery || '',
     items: [
       {
         unitPrice: amountCentavos,
