@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { X, Loader2, CheckCircle, AlertCircle } from 'lucide-react';
 import { gerarPix } from '../services/pixService';
 import { consultarCPF, formatCPF, validateCPF, CPFValidationResult } from '../services/cpfService';
-import { buildUTMString, getStoredUTMParams } from '../utils/utm';
+import { buildUTMString, getStoredUTMParams, trackEvent } from '../utils/utm';
 
 interface PaymentModalProps {
   isOpen: boolean;
