@@ -82,11 +82,22 @@ export const PIXModal: React.FC<PIXModalProps> = ({ isOpen, onClose, pixData, on
         {/* QR Code */}
         {pixData.pixQrCode && (
           <div className="bg-white p-4 rounded-xl border-2 border-gray-200 mb-6 text-center">
-            <img 
-              src={pixData.pixQrCode} 
-              alt="QR Code PIX" 
-              className="w-48 h-48 mx-auto mb-3"
-            />
+            <div className="w-48 h-48 mx-auto mb-3 border-2 border-gray-300 rounded-lg overflow-hidden">
+              <img 
+                src={pixData.pixQrCode} 
+                alt="QR Code PIX" 
+                className="w-full h-full object-contain"
+                onError={(e) => {
+                  console.error('Erro ao carregar QR Code:', e);
+                  const target = e.target as HTMLImageElement;
+                  target.style.display = 'none';
+                  const parent = target.parentElement;
+                  if (parent) {
+                    parent.innerHTML = '<div class="flex items-center justify-center h-full text-gray-500"><span>QR Code não disponível<br/>Use o código PIX abaixo</span></div>';
+                  }
+                }}
+              />
+            </div>
             <p className="text-sm text-gray-600">
               Escaneie o QR Code com seu app do banco
             </p>
