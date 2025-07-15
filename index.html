@@ -4,44 +4,12 @@
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/vite.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Página de Upsell - Combo da Sorte + Rifa VIP</title>
+    <title>Combo da Sorte + Rifa VIP</title>
     <script 
       src="https://cdn.xtracky.com/scripts/utm-handler.js"
       data-token="a0e9be80-f291-4396-a60f-4788f0006bf2"
       data-click-id-param="click_id"
       async>
-    </script>
-    
-    <!-- UTM Tracking Initialization -->
-    <script>
-      // Initialize UTM tracking when page loads
-      window.addEventListener('DOMContentLoaded', function() {
-        // Extract UTM parameters from URL
-        const urlParams = new URLSearchParams(window.location.search);
-        const utmKeys = ['utm_source', 'utm_medium', 'utm_campaign', 'utm_term', 'utm_content', 'click_id', 'fbclid', 'gclid'];
-        const params = {};
-        
-        utmKeys.forEach(key => {
-          const value = urlParams.get(key);
-          if (value) {
-            params[key] = value;
-          }
-        });
-        
-        // Store UTM parameters
-        if (Object.keys(params).length > 0) {
-          localStorage.setItem('utm_params', JSON.stringify(params));
-          console.log('UTM Parameters captured:', params);
-        }
-        
-        // Send to Xtracky if available
-        if (window.xtracky && typeof window.xtracky.track === 'function') {
-          window.xtracky.track('page_view', {
-            page: window.location.pathname,
-            ...params
-          });
-        }
-      });
     </script>
   </head>
   <body>
