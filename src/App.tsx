@@ -1,7 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { Star, Zap, Clock, Award, ChevronRight, X, AlertTriangle, Gift, MessageCircle, CheckCircle, ArrowRight } from 'lucide-react';
-import { getUTMParams, storeUTMParams, getStoredUTMParams, buildUTMString, trackEvent, initializeUTMTracking, getCheckoutUrl } from './utils/utm';
-import { TrackingDebug } from './components/TrackingDebug';
 import { PaymentModal } from './components/PaymentModal';
 import { PIXModal } from './components/PIXModal';
 
