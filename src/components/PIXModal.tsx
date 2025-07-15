@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { X, Copy, CheckCircle, Clock, QrCode } from 'lucide-react';
+import { verificarStatusPagamento } from '../services/pixService';
+import { trackEvent } from '../utils/utm';
 
 interface PIXModalProps {
   isOpen: boolean;
@@ -11,6 +13,8 @@ interface PIXModalProps {
 export const PIXModal: React.FC<PIXModalProps> = ({ isOpen, onClose, pixData, onPaymentConfirmed }) => {
   const [copied, setCopied] = useState(false);
   const [timeLeft, setTimeLeft] = useState(30 * 60); // 30 minutos
+  const [paymentStatus, setPaymentStatus] = useState('pending');
+  const [checkingPayment, setCheckingPayment] = useState(false);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -28,6 +32,42 @@ export const PIXModal: React.FC<PIXModalProps> = ({ isOpen, onClose, pixData, on
     return () => clearInterval(timer);
   }, [isOpen]);
 
+  // Verificar status do pagamento periodicamente
+  useEffect(() => {
+    if (!isOpen || !pixData?.id) return;
+
+    const checkPaymentStatus = async () => {
+      if (checkingPayment) return;
+      
+      setCheckingPayment(true);
+      try {
+        const status = await verificarStatusPagamento(pixData.id);
+        setPaymentStatus(status);
+        
+        if (status === 'paid' || status === 'approved') {
+          trackEvent('payment_confirmed', {
+            transaction_id: pixData.id,
+            amount: '29.90',
+            method: 'pix'
+          });
+          onPaymentConfirmed();
+        }
+      } catch (error) {
+        console.error('Erro ao verificar status:', error);
+      } finally {
+        setCheckingPayment(false);
+      }
+    };
+
+    // Verificar imediatamente
+    checkPaymentStatus();
+
+    // Verificar a cada 10 segundos
+    const statusInterval = setInterval(checkPaymentStatus, 10000);
+
+    return () => clearInterval(statusInterval);
+  }, [isOpen, pixData?.id, checkingPayment, onPaymentConfirmed]);
+
   if (!isOpen || !pixData) return null;
 
   const formatTime = (seconds: number) => {
@@ -40,6 +80,13 @@ export const PIXModal: React.FC<PIXModalProps> = ({ isOpen, onClose, pixData, on
     try {
       await navigator.clipboard.writeText(text);
       setCopied(true);
+      
+      // Track copy action
+      trackEvent('pix_code_copied', {
+        transaction_id: pixData.id,
+        amount: '29.90'
+      });
+      
       setTimeout(() => setCopied(false), 2000);
     } catch (err) {
       console.error('Erro ao copiar:', err);
@@ -69,14 +116,21 @@ export const PIXModal: React.FC<PIXModalProps> = ({ isOpen, onClose, pixData, on
         <div className="bg-gradient-to-r from-red-500 to-red-600 rounded-xl p-4 mb-6 text-center text-white">
           <div className="flex items-center justify-center mb-2">
             <Clock className="w-5 h-5 mr-2" />
-            <span className="font-bold">Você tem 30 minutos para realizar o pagamento:</span>
+            <span className="font-bold">
+              {paymentStatus === 'pending' ? 'Você tem 30 minutos para realizar o pagamento:' : 'Aguardando confirmação do pagamento...'}
+            </span>
           </div>
           <div className="text-3xl font-mono font-bold">
             {formatTime(timeLeft)}
           </div>
           <div className="text-sm mt-1">
-            Após isso, o código expira.
+            {paymentStatus === 'pending' ? 'Após isso, o código expira.' : 'Verificando pagamento automaticamente...'}
           </div>
+          {checkingPayment && (
+            <div className="mt-2 text-yellow-200 text-sm">
+              🔄 Verificando pagamento...
+            </div>
+          )}
         </div>
 
         {/* QR Code */}
@@ -169,13 +223,25 @@ export const PIXModal: React.FC<PIXModalProps> = ({ isOpen, onClose, pixData, on
         </div>
 
         {/* Aviso de Pagamento */}
-        <div className="bg-yellow-50 rounded-xl p-4 text-center border-2 border-yellow-200">
+        <div className={`rounded-xl p-4 text-center border-2 ${
+          paymentStatus === 'pending' 
+            ? 'bg-yellow-50 border-yellow-200' 
+            : 'bg-blue-50 border-blue-200'
+        }`}>
           <div className="text-yellow-800 font-semibold mb-2">
-            ⚠️ Importante
+            {paymentStatus === 'pending' ? '⚠️ Importante' : '🔄 Status do Pagamento'}
           </div>
           <div className="text-yellow-700 text-sm">
-            Após realizar o pagamento, você receberá automaticamente as instruções para acessar o grupo VIP e receber seus números extras.
+            {paymentStatus === 'pending' 
+              ? 'Após realizar o pagamento, você receberá automaticamente as instruções para acessar o grupo VIP e receber seus números extras.'
+              : 'Estamos verificando seu pagamento automaticamente. Assim que for confirmado, você será redirecionado.'
+            }
           </div>
+          {pixData.id && (
+            <div className="text-xs text-gray-500 mt-2">
+              ID da Transação: {pixData.id}
+            </div>
+          )}
         </div>
       </div>
     </div>

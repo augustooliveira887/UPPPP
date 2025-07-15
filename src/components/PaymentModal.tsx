@@ -103,6 +103,13 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({ isOpen, onClose, onS
         amount: 2990,
         utmQuery
       });
+      
+      // Track PIX generation attempt
+      trackEvent('pix_generation_started', {
+        amount: '29.90',
+        has_utm: Object.keys(utmParams).length > 0
+      });
+      
       const result = await gerarPix(
         cpfValidation.userData.name,
         cpfValidation.userData.email,
@@ -119,18 +126,27 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({ isOpen, onClose, onS
         hasQrCode: !!result.pixQrCode,
         hasPixCode: !!result.pixCode
       });
+       
+       // Track successful PIX generation
+       trackEvent('pix_generation_success', {
+         transaction_id: result.id,
+         amount: '29.90',
+         status: result.status
+       });
+       
       onSuccess(result);
     } catch (error) {
       console.error('Erro ao gerar PIX:', error);
       
+       // Track PIX generation error
+       trackEvent('pix_generation_error', {
+         error: error instanceof Error ? error.message : 'Erro desconhecido',
+         amount: '29.90'
+       });
+       
       // Mostrar erro mais amigável para o usuário
       const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
-      
-      if (errorMessage.includes('CORS') || errorMessage.includes('Failed to fetch')) {
-        alert('Problema de conexão detectado. O sistema está funcionando em modo de desenvolvimento. O PIX será gerado normalmente.');
-      } else {
-        alert(`Erro ao gerar PIX: ${errorMessage}`);
-      }
+      alert(`Erro ao gerar PIX: ${errorMessage}`);
     } finally {
       setIsGeneratingPIX(false);
     }
